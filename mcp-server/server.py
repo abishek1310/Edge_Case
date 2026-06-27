@@ -10,10 +10,10 @@ from pydantic import BaseModel
 
 APP_BASE_URL = "http://127.0.0.1:5001"
 TOXIPROXY_BASE_URL = "http://127.0.0.1:8474"
-DB_PROXY_NAME = "warroom-db-proxy"
+DB_PROXY_NAME = "edgecase-db-proxy"
 
-app = FastAPI(title="WARROOM MCP Server")
-mcp = FastMCP("WARROOM MCP")
+app = FastAPI(title="EDGE_CASE MCP Server")
+mcp = FastMCP("EDGE_CASE MCP")
 
 MCP_STATE = {
     "drill_type": None,
@@ -69,25 +69,25 @@ def resolve_db_container_name() -> str:
         )
 
     names = [line.strip() for line in result.stdout.splitlines() if line.strip()]
-    matches = [name for name in names if "warroom-db" in name]
+    matches = [name for name in names if "edgecase-db" in name]
 
     if not matches:
         raise HTTPException(
             status_code=500,
-            detail="Could not find a Podman container matching warroom-db.",
+            detail="Could not find a Podman container matching edgecase-db.",
         )
 
     def score(name: str) -> tuple[int, int]:
-        if name == "warroom-db":
+        if name == "edgecase-db":
             return (0, len(name))
-        if name.startswith("warroom-db"):
+        if name.startswith("edgecase-db"):
             return (1, len(name))
-        if name.endswith("warroom-db") or name.endswith("_warroom-db_1"):
+        if name.endswith("edgecase-db") or name.endswith("_edgecase-db_1"):
             return (2, len(name))
         return (3, len(name))
 
     container_name = sorted(matches, key=score)[0]
-    print(f"[WARROOM MCP] resolved container={container_name}")
+    print(f"[EDGE_CASE MCP] resolved container={container_name}")
     record_activity(f"MCP resolved {container_name}")
     return container_name
 
@@ -106,7 +106,7 @@ def stop_container(container_name: str) -> None:
             status_code=500,
             detail=f"Could not stop container {container_name}: {result.stderr.strip()}",
         )
-    print("[WARROOM MCP] podman stop executed")
+    print("[EDGE_CASE MCP] podman stop executed")
     record_activity("MCP executed Podman stop")
 
 
@@ -117,7 +117,7 @@ def start_container(container_name: str) -> None:
             status_code=500,
             detail=f"Could not start container {container_name}: {result.stderr.strip()}",
         )
-    print("[WARROOM MCP] podman start executed")
+    print("[EDGE_CASE MCP] podman start executed")
     record_activity("MCP executed Podman start")
 
 
@@ -150,7 +150,7 @@ def resolve_db_proxy_name() -> str:
 
     proxies = response.json()
     if isinstance(proxies, dict) and DB_PROXY_NAME in proxies:
-        print(f"[WARROOM MCP] resolved proxy={DB_PROXY_NAME}")
+        print(f"[EDGE_CASE MCP] resolved proxy={DB_PROXY_NAME}")
         record_activity(f"MCP resolved {DB_PROXY_NAME}")
         return DB_PROXY_NAME
 
@@ -193,7 +193,7 @@ def inject_latency_toxic(proxy_name: str, latency_ms: int = 800) -> None:
             detail=f"Could not inject latency toxic: {exc}",
         ) from exc
 
-    print(f"[WARROOM MCP] injected {latency_ms}ms latency")
+    print(f"[EDGE_CASE MCP] injected {latency_ms}ms latency")
     record_activity(f"MCP injected {latency_ms}ms latency")
 
 
@@ -215,7 +215,7 @@ def delete_latency_toxic(proxy_name: str, raise_if_missing: bool = True) -> None
             detail=f"Could not remove latency toxic: {exc}",
         ) from exc
 
-    print("[WARROOM MCP] removed latency toxic")
+    print("[EDGE_CASE MCP] removed latency toxic")
     record_activity("MCP removed latency toxic")
 
 
@@ -232,7 +232,7 @@ def run_drill_impl(
     duration: str | None = None,
     intensity: str | None = None,
 ) -> dict:
-    print(f"[WARROOM MCP] run_drill called drill_type={drill_type}")
+    print(f"[EDGE_CASE MCP] run_drill called drill_type={drill_type}")
     MCP_STATE["activity"] = []
     record_activity(f"MCP received run_drill({drill_type})")
 
@@ -339,7 +339,7 @@ def run_drill_impl(
 
 
 def reset_impl(drill_id: str | None = None) -> dict:
-    print(f"[WARROOM MCP] reset called drill_id={drill_id}")
+    print(f"[EDGE_CASE MCP] reset called drill_id={drill_id}")
     record_activity("MCP reset called")
 
     if MCP_STATE["drill_type"] == "db_down":
@@ -377,7 +377,7 @@ def reset_impl(drill_id: str | None = None) -> dict:
 
 
 def get_evidence_impl(drill_id: str) -> dict:
-    print(f"[WARROOM MCP] get_evidence called drill_id={drill_id}")
+    print(f"[EDGE_CASE MCP] get_evidence called drill_id={drill_id}")
     return {
         "ok": True,
         "drill_id": drill_id,
@@ -417,7 +417,7 @@ def get_evidence(drill_id: str) -> dict:
 
 @app.get("/health")
 def health() -> dict:
-    return {"ok": True, "service": "warroom-mcp"}
+    return {"ok": True, "service": "edgecase-mcp"}
 
 
 @app.post("/tools/run_drill")

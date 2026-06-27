@@ -1,19 +1,19 @@
 const DRILL_CONFIG = {
   db_down: {
     label: "DB Down",
-    targetService: "warroom-db",
+    targetService: "edgecase-db",
     duration: "60 seconds",
     impact: "Checkout requests may return 5xx errors"
   },
   latency_spike: {
     label: "Latency Spike",
-    targetService: "warroom-db via toxiproxy",
+    targetService: "edgecase-db via toxiproxy",
     duration: "60 seconds",
     impact: "Responses may slow down or time out"
   },
   request_flood: {
     label: "Request Flood",
-    targetService: "warroom-app",
+    targetService: "edgecase-app",
     duration: "20 seconds",
     impact: "Success rate may drop under load"
   },
@@ -68,7 +68,7 @@ const DB_DOWN_SIMULATION_STEPS = [
       state.dbStatus = "stopped";
       state.successRate = "98%";
       state.p95Latency = "180ms";
-      state.timeline.push({ time: "00:02", text: "warroom-db stopped responding" });
+      state.timeline.push({ time: "00:02", text: "edgecase-db stopped responding" });
     }
   },
   {
@@ -110,7 +110,7 @@ const DB_DOWN_SIMULATION_STEPS = [
       state.errorCount = "29";
       state.successRate = "61%";
       state.p95Latency = "910ms";
-      state.timeline.push({ time: "00:07", text: "warroom-app degraded under dependency failure" });
+      state.timeline.push({ time: "00:07", text: "edgecase-app degraded under dependency failure" });
     }
   },
   {
@@ -225,7 +225,7 @@ function cloneBattleState(state) {
 
 function setFear(text) {
   document.getElementById("fearInput").value = text;
-  console.log("[WARROOM] fear preset selected:", text);
+  console.log("[EDGE_CASE] fear preset selected:", text);
 }
 
 function runAIDecide() {
@@ -241,11 +241,11 @@ function runAIDecide() {
   setMaxUnlockedStep(2);
   populateApprovalScreen(plan);
   showScreen("screen2");
-  console.log("[WARROOM] AI decide mode selected");
+  console.log("[EDGE_CASE] AI decide mode selected");
 }
 
 async function classifyFear(fear) {
-  console.log("[WARROOM] classification request started", { fear });
+  console.log("[EDGE_CASE] classification request started", { fear });
 
   const response = await fetch("http://127.0.0.1:8000/classify", {
     method: "POST",
@@ -261,7 +261,7 @@ async function classifyFear(fear) {
 
   const data = await response.json();
 
-  console.log("[WARROOM] classification response received", data);
+  console.log("[EDGE_CASE] classification response received", data);
 
   return {
     drillType: data.drill_type,
@@ -273,7 +273,7 @@ async function classifyFear(fear) {
 }
 
 async function startDrillRequest(drillType, duration, intensity) {
-  console.log("[WARROOM] drill start request started", { drillType, duration, intensity });
+  console.log("[EDGE_CASE] drill start request started", { drillType, duration, intensity });
 
   const response = await fetch("http://127.0.0.1:8000/drill/start", {
     method: "POST",
@@ -293,7 +293,7 @@ async function startDrillRequest(drillType, duration, intensity) {
 
   const data = await response.json();
 
-  console.log("[WARROOM] drill start request succeeded", data);
+  console.log("[EDGE_CASE] drill start request succeeded", data);
 
   return data;
 }
@@ -308,7 +308,7 @@ function showScreen(screenToShowId) {
   const step = getStepFromScreenId(screenToShowId);
   updateStepIndicator(step);
 
-  console.log("[WARROOM] screen transition:", screenToShowId);
+  console.log("[EDGE_CASE] screen transition:", screenToShowId);
 }
 
 function updateApprovalHelper() {
@@ -426,13 +426,13 @@ async function runDrill() {
     populateApprovalScreen(plan);
     showScreen("screen2");
   } catch (error) {
-    console.error("[WARROOM] classification request failed", error);
+    console.error("[EDGE_CASE] classification request failed", error);
     alert("Could not classify fear. Please make sure the backend is running.");
   }
 }
 
 function goBack() {
-  console.log("[WARROOM] cancel clicked, returning to input screen");
+  console.log("[EDGE_CASE] cancel clicked, returning to input screen");
   showScreen("screen1");
 }
 
@@ -450,7 +450,7 @@ function stopDrillStatusPolling() {
   if (drillStatusPollingId) {
     clearInterval(drillStatusPollingId);
     drillStatusPollingId = null;
-    console.log("[WARROOM] polling stopped");
+    console.log("[EDGE_CASE] polling stopped");
   }
 }
 
@@ -482,7 +482,7 @@ function resetBattleState() {
   renderBattleState();
   setViewVerdictButtonVisible(false);
   resetEvidencePanel();
-  console.log("[WARROOM] battle state reset");
+  console.log("[EDGE_CASE] battle state reset");
 }
 
 function setViewVerdictButtonVisible(isVisible) {
@@ -521,7 +521,7 @@ function humanizeTimelineText(text) {
     return "Simulation started";
   }
 
-  if (/warroom-db stopped/i.test(text)) {
+  if (/edgecase-db stopped/i.test(text)) {
     return "Database went offline";
   }
 
@@ -582,11 +582,11 @@ function generateLiveNarration() {
 
   if (drillType === "db_down") {
     if (battleState.dbStatus === "stopped") {
-      lines.push("WARROOM intentionally took the database offline through MCP.");
+      lines.push("EDGE_CASE intentionally took the database offline through MCP.");
     } else if (hasMcpActivity) {
-      lines.push("WARROOM is using MCP to control the database failure simulation and watch the blast radius.");
+      lines.push("EDGE_CASE is using MCP to control the database failure simulation and watch the blast radius.");
     } else {
-      lines.push("WARROOM is preparing a database failure simulation and watching the checkout path closely.");
+      lines.push("EDGE_CASE is preparing a database failure simulation and watching the checkout path closely.");
     }
 
     if (errorCountValue > 0 || hasFirstFailure) {
@@ -594,7 +594,7 @@ function generateLiveNarration() {
     } else if (battleState.appStatus === "degraded") {
       lines.push("The app is still running, but the checkout path is weakening as database access becomes unstable.");
     } else {
-      lines.push("The app is still up, but WARROOM is watching for user-facing impact on checkout.");
+      lines.push("The app is still up, but EDGE_CASE is watching for user-facing impact on checkout.");
     }
 
     if (!Number.isNaN(successRateValue) && successRateValue === 0) {
@@ -602,11 +602,11 @@ function generateLiveNarration() {
     } else if (!Number.isNaN(successRateValue) && successRateValue < 100) {
       lines.push("The blast radius has reached the purchase flow and some users would now see failed checkout attempts.");
     } else {
-      lines.push("No checkout failures are visible yet, but WARROOM is still collecting live evidence.");
+      lines.push("No checkout failures are visible yet, but EDGE_CASE is still collecting live evidence.");
     }
 
     if (battleCompleted) {
-      lines.push("WARROOM has collected enough evidence to show that this database outage directly undermines checkout reliability.");
+      lines.push("EDGE_CASE has collected enough evidence to show that this database outage directly undermines checkout reliability.");
     } else if (battleState.dbStatus === "stopped") {
       lines.push("Failure impact is spreading from infrastructure to the user-facing checkout flow.");
     } else {
@@ -614,9 +614,9 @@ function generateLiveNarration() {
     }
   } else if (drillType === "latency_spike") {
     if (hasMcpActivity) {
-      lines.push("WARROOM injected latency into the database path through MCP.");
+      lines.push("EDGE_CASE injected latency into the database path through MCP.");
     } else {
-      lines.push("WARROOM is simulating a slower database path and observing the impact on checkout.");
+      lines.push("EDGE_CASE is simulating a slower database path and observing the impact on checkout.");
     }
 
     if (!Number.isNaN(latencyValue) && latencyValue >= 800) {
@@ -632,12 +632,12 @@ function generateLiveNarration() {
     }
 
     if (battleCompleted) {
-      lines.push("WARROOM has confirmed that dependency slowdown can erode checkout reliability before a full outage occurs.");
+      lines.push("EDGE_CASE has confirmed that dependency slowdown can erode checkout reliability before a full outage occurs.");
     } else {
       lines.push("If latency continues rising, slow responses may turn into timeouts or failed purchases.");
     }
   } else if (drillType === "credential_exposure") {
-    lines.push("WARROOM is simulating credential exposure patterns across authentication and secret handling.");
+    lines.push("EDGE_CASE is simulating credential exposure patterns across authentication and secret handling.");
 
     if (errorCountValue > 0 || hasFirstFailure) {
       lines.push("The current posture suggests account misuse risk if leaked credentials are replayed.");
@@ -648,12 +648,12 @@ function generateLiveNarration() {
     lines.push("This test focuses on reducing takeover risk before attackers can exploit weak secret controls.");
 
     if (battleCompleted) {
-      lines.push("WARROOM has captured enough evidence to prioritize credential protection fixes.");
+      lines.push("EDGE_CASE has captured enough evidence to prioritize credential protection fixes.");
     } else {
-      lines.push("WARROOM is still collecting evidence from authentication behavior and simulated abuse signals.");
+      lines.push("EDGE_CASE is still collecting evidence from authentication behavior and simulated abuse signals.");
     }
   } else if (drillType === "pii_exposure") {
-    lines.push("WARROOM is simulating data exposure pressure on client-data paths.");
+    lines.push("EDGE_CASE is simulating data exposure pressure on client-data paths.");
 
     if (errorCountValue > 0 || hasFirstFailure) {
       lines.push("Weak data boundaries are now visible and could expose sensitive client information.");
@@ -664,12 +664,12 @@ function generateLiveNarration() {
     lines.push("This drill validates whether data minimization and access controls are strong enough.");
 
     if (battleCompleted) {
-      lines.push("WARROOM has identified concrete points where privacy protections should be tightened.");
+      lines.push("EDGE_CASE has identified concrete points where privacy protections should be tightened.");
     } else {
-      lines.push("WARROOM is still mapping where sensitive fields could leak through responses.");
+      lines.push("EDGE_CASE is still mapping where sensitive fields could leak through responses.");
     }
   } else if (drillType === "dependency_api_failure") {
-    lines.push("WARROOM is simulating a third-party API outage in a critical app path.");
+    lines.push("EDGE_CASE is simulating a third-party API outage in a critical app path.");
 
     if (errorCountValue > 0 || hasFirstFailure) {
       lines.push("User flow reliability is dropping because fallback behavior is not absorbing upstream failure.");
@@ -680,12 +680,12 @@ function generateLiveNarration() {
     lines.push("This test shows how quickly external dependency failures can reach users.");
 
     if (battleCompleted) {
-      lines.push("WARROOM has gathered evidence to prioritize timeout, retry, and fallback improvements.");
+      lines.push("EDGE_CASE has gathered evidence to prioritize timeout, retry, and fallback improvements.");
     } else {
-      lines.push("WARROOM is still observing dependency error propagation through the app.");
+      lines.push("EDGE_CASE is still observing dependency error propagation through the app.");
     }
   } else if (drillType === "ai_risk_suite") {
-    lines.push("WARROOM AI selected a short top-risk suite for full-app vulnerability coverage.");
+    lines.push("EDGE_CASE AI selected a short top-risk suite for full-app vulnerability coverage.");
 
     if (errorCountValue > 0 || hasFirstFailure) {
       lines.push("The suite is already surfacing real user-impact patterns across multiple risk categories.");
@@ -696,19 +696,19 @@ function generateLiveNarration() {
     lines.push("This mode is designed for teams who are unsure what to test first.");
 
     if (battleCompleted) {
-      lines.push("WARROOM now has a ranked risk summary and prioritized actions for the app.");
+      lines.push("EDGE_CASE now has a ranked risk summary and prioritized actions for the app.");
     } else {
-      lines.push("WARROOM is collecting cross-scenario evidence to produce a prioritized final verdict.");
+      lines.push("EDGE_CASE is collecting cross-scenario evidence to produce a prioritized final verdict.");
     }
   } else {
-    lines.push("WARROOM is pushing sustained traffic into the checkout path and watching how the system absorbs load.");
+    lines.push("EDGE_CASE is pushing sustained traffic into the checkout path and watching how the system absorbs load.");
 
     if (errorCountValue > 0 || hasFirstFailure) {
       lines.push("The app is still responding, but pressure is turning into visible checkout failures.");
     } else if (!Number.isNaN(latencyValue) && latencyValue > 300) {
       lines.push("The app is still responding, but request pressure is pushing response delay upward.");
     } else {
-      lines.push("The system is still serving requests, but WARROOM is monitoring for rising latency and saturation.");
+      lines.push("The system is still serving requests, but EDGE_CASE is monitoring for rising latency and saturation.");
     }
 
     if (!Number.isNaN(successRateValue) && successRateValue < 100) {
@@ -718,7 +718,7 @@ function generateLiveNarration() {
     }
 
     if (battleCompleted) {
-      lines.push("WARROOM has gathered enough evidence to show how traffic pressure changes the risk profile of checkout.");
+      lines.push("EDGE_CASE has gathered enough evidence to show how traffic pressure changes the risk profile of checkout.");
     } else {
       lines.push("If traffic continues rising, latency and failure risk will keep increasing.");
     }
@@ -900,7 +900,7 @@ function applyDrillStatus(statusData) {
 }
 
 async function fetchDrillEvidence() {
-  console.log("[WARROOM] evidence fetch start");
+  console.log("[EDGE_CASE] evidence fetch start");
 
   const response = await fetch("http://127.0.0.1:8000/drill/evidence");
 
@@ -910,13 +910,13 @@ async function fetchDrillEvidence() {
 
   const data = await response.json();
 
-  console.log("[WARROOM] evidence fetch success", data);
+  console.log("[EDGE_CASE] evidence fetch success", data);
 
   return data;
 }
 
 async function fetchActionPlan() {
-  console.log("[WARROOM] action plan fetch start");
+  console.log("[EDGE_CASE] action plan fetch start");
 
   const response = await fetch("http://127.0.0.1:8000/drill/action-plan");
 
@@ -925,12 +925,12 @@ async function fetchActionPlan() {
   }
 
   const data = await response.json();
-  console.log("[WARROOM] action plan fetch success", data);
+  console.log("[EDGE_CASE] action plan fetch success", data);
   return data;
 }
 
 async function resetDrillRequest() {
-  console.log("[WARROOM] reset request start");
+  console.log("[EDGE_CASE] reset request start");
 
   const response = await fetch("http://127.0.0.1:8000/drill/reset", {
     method: "POST"
@@ -942,7 +942,7 @@ async function resetDrillRequest() {
 
   const data = await response.json();
 
-  console.log("[WARROOM] reset success", data);
+  console.log("[EDGE_CASE] reset success", data);
 
   return data;
 }
@@ -1016,7 +1016,7 @@ async function generateFixPrompt() {
     textarea.value = data.prompt || "";
     setRemediationStatusText("Fix prompt generated. Review and apply when ready.");
   } catch (error) {
-    console.error("[WARROOM] remediation prompt fetch failed", error);
+    console.error("[EDGE_CASE] remediation prompt fetch failed", error);
     alert("Could not generate remediation prompt. Please make sure the backend is running.");
   }
 }
@@ -1039,7 +1039,7 @@ async function applyFixPrompt() {
     const result = await applyRemediationPrompt(promptText, currentPlan.drillType);
     setRemediationStatusText(`Prompt applied for ${result.drill_type}. Run verification re-test.`);
   } catch (error) {
-    console.error("[WARROOM] remediation apply failed", error);
+    console.error("[EDGE_CASE] remediation apply failed", error);
     alert("Could not apply remediation prompt. Please make sure the backend is running.");
   }
 }
@@ -1072,7 +1072,7 @@ async function runVerificationRetest() {
     currentDrillId = data.drill_id;
     startDrillStatusPolling();
   } catch (error) {
-    console.error("[WARROOM] remediation verification failed", error);
+    console.error("[EDGE_CASE] remediation verification failed", error);
     alert("Could not run verification re-test. Please make sure backend and MCP are running.");
   }
 }
@@ -1257,7 +1257,7 @@ async function showVerdictScreen() {
   verdictTransitionInFlight = true;
 
   try {
-    console.log("[WARROOM] verdict transition triggered");
+    console.log("[EDGE_CASE] verdict transition triggered");
     const [evidenceData, actionPlanData] = await Promise.all([
       fetchDrillEvidence(),
       fetchActionPlan()
@@ -1268,10 +1268,10 @@ async function showVerdictScreen() {
     populateActionPlanScreen();
     setMaxUnlockedStep(4);
     showScreen("screen4");
-    console.log("[WARROOM] transition to verdict screen");
+    console.log("[EDGE_CASE] transition to verdict screen");
   } catch (error) {
     verdictTransitionInFlight = false;
-    console.error("[WARROOM] evidence fetch failure", error);
+    console.error("[EDGE_CASE] evidence fetch failure", error);
     alert("Could not load verdict evidence. Please make sure the backend is running.");
   }
 }
@@ -1290,7 +1290,7 @@ async function pollDrillStatus() {
   try {
     const statusData = await fetchDrillStatus();
 
-    console.log("[WARROOM] polling response received", statusData);
+    console.log("[EDGE_CASE] polling response received", statusData);
 
     applyDrillStatus(statusData);
 
@@ -1301,11 +1301,11 @@ async function pollDrillStatus() {
         battleState.progressPercent = 100;
         renderBattleState();
         setViewVerdictButtonVisible(true);
-        console.log("[WARROOM] battle screen completed, waiting for manual verdict");
+        console.log("[EDGE_CASE] battle screen completed, waiting for manual verdict");
       }
     }
   } catch (error) {
-    console.error("[WARROOM] drill status polling failed", error);
+    console.error("[EDGE_CASE] drill status polling failed", error);
     stopDrillStatusPolling();
     alert("Could not load drill status. Please make sure the backend is running.");
   }
@@ -1319,7 +1319,7 @@ function parseDurationSeconds(durationText) {
 function startProgressAnimation() {
   const durationSeconds = parseDurationSeconds(currentPlan?.duration || "60 seconds");
   battleStartedAt = Date.now();
-  console.log("[WARROOM] battle screen started");
+  console.log("[EDGE_CASE] battle screen started");
   battleState.progressPercent = 0;
   renderBattleState();
 
@@ -1353,7 +1353,7 @@ function startDrillStatusPolling() {
   showScreen("screen3");
   renderBattleState();
 
-  console.log("[WARROOM] polling started", {
+  console.log("[EDGE_CASE] polling started", {
     drillId: currentDrillId,
     drillType: currentPlan ? currentPlan.drillType : "db_down"
   });
@@ -1369,12 +1369,12 @@ function viewVerdict() {
     return;
   }
 
-  console.log("[WARROOM] view verdict clicked");
+  console.log("[EDGE_CASE] view verdict clicked");
   void showVerdictScreen();
 }
 
 function backToSimulation() {
-  console.log("[WARROOM] back to simulation clicked");
+  console.log("[EDGE_CASE] back to simulation clicked");
   showScreen("screen3");
   renderBattleState();
 }
@@ -1394,7 +1394,7 @@ async function approveRun() {
   try {
     const approveButton = document.getElementById("approveButton");
     approveButton.classList.add("approval-submit-pulse");
-    console.log("[WARROOM] approved drill configuration", {
+    console.log("[EDGE_CASE] approved drill configuration", {
       drillType: currentPlan.drillType,
       duration: selectedDuration,
       intensity: selectedIntensity
@@ -1407,7 +1407,7 @@ async function approveRun() {
     );
     currentDrillId = data.drill_id;
 
-    console.log("[WARROOM] drill started", {
+    console.log("[EDGE_CASE] drill started", {
       drillId: currentDrillId,
       drillType: currentPlan.drillType,
       duration: selectedDuration,
@@ -1416,13 +1416,13 @@ async function approveRun() {
 
     startDrillStatusPolling();
   } catch (error) {
-    console.error("[WARROOM] drill start request failed", error);
+    console.error("[EDGE_CASE] drill start request failed", error);
     alert("Could not start drill. Please make sure the backend is running.");
   }
 }
 
 function abortDrill() {
-  console.log("[WARROOM] abort clicked, stopping drill");
+  console.log("[EDGE_CASE] abort clicked, stopping drill");
   currentDrillId = null;
   currentPlan = null;
   maxUnlockedStep = 1;
@@ -1438,7 +1438,7 @@ function toggleEvidence() {
   evidencePanel.classList.toggle("hidden", !isHidden);
   evidenceToggle.textContent = isHidden ? "Hide Evidence" : "Show Evidence";
 
-  console.log(`[WARROOM] evidence panel ${isHidden ? "expanded" : "collapsed"}`);
+  console.log(`[EDGE_CASE] evidence panel ${isHidden ? "expanded" : "collapsed"}`);
 }
 
 async function resetToStart() {
@@ -1446,7 +1446,7 @@ async function resetToStart() {
     return;
   }
 
-  console.log("[WARROOM] reset button clicked");
+  console.log("[EDGE_CASE] reset button clicked");
   resetInProgress = true;
   setResetButtonState(true);
 
@@ -1462,9 +1462,9 @@ async function resetToStart() {
     }
     setRemediationStatusText("No remediation prompt applied yet.");
     showScreen("screen1");
-    console.log("[WARROOM] UI returned to screen 1");
+    console.log("[EDGE_CASE] UI returned to screen 1");
   } catch (error) {
-    console.error("[WARROOM] reset failure", error);
+    console.error("[EDGE_CASE] reset failure", error);
     alert("Could not reset drill. Please make sure the backend is running.");
   } finally {
     resetInProgress = false;
@@ -1486,5 +1486,5 @@ document.addEventListener("DOMContentLoaded", () => {
   updateStepIndicator(1);
   resetBattleState();
   showScreen("screen1");
-  console.log("[WARROOM] initialized");
+  console.log("[EDGE_CASE] initialized");
 });

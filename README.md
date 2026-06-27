@@ -1,10 +1,10 @@
-# WARROOM
+# EDGE_CASE
 
 **Break it before your users do.**
 
-WARROOM is a chaos engineering and resilience testing tool that allows developers, solo builders, and teams to simulate real system failures, observe their impact in real time, and understand how their application behaves under stress before it reaches production users.
+EDGE_CASE is a chaos engineering and resilience testing tool that allows developers, solo builders, and teams to simulate real system failures, observe their impact in real time, and understand how their application behaves under stress before it reaches production users.
 
-## Why WARROOM Exists
+## Why EDGE_CASE Exists
 
 Modern applications are increasingly built:
 
@@ -14,11 +14,11 @@ Modern applications are increasingly built:
 
 In this environment, systems often work in ideal conditions but fail unpredictably under stress.
 
-WARROOM is built to answer one critical question:
+EDGE_CASE is built to answer one critical question:
 
 **What happens when something breaks?**
 
-Instead of guessing, WARROOM lets you:
+Instead of guessing, EDGE_CASE lets you:
 
 - simulate failure scenarios
 - observe real impact on your system
@@ -29,19 +29,19 @@ Instead of guessing, WARROOM lets you:
 
 ### Solo Builders and Founders
 
-If you are building quickly and deploying frequently, WARROOM helps you validate that your system will not break under real-world conditions.
+If you are building quickly and deploying frequently, EDGE_CASE helps you validate that your system will not break under real-world conditions.
 
 ### Developers Using AI-Generated Code
 
-AI tools can generate working code, but not always resilient systems. WARROOM helps ensure that your application behaves correctly when dependencies fail or degrade.
+AI tools can generate working code, but not always resilient systems. EDGE_CASE helps ensure that your application behaves correctly when dependencies fail or degrade.
 
 ### Teams Preparing for Scale
 
-Before increasing traffic or launching features, WARROOM allows you to stress test critical paths and identify weak points early.
+Before increasing traffic or launching features, EDGE_CASE allows you to stress test critical paths and identify weak points early.
 
-## What WARROOM Does
+## What EDGE_CASE Does
 
-WARROOM provides a full loop from failure simulation to action:
+EDGE_CASE provides a full loop from failure simulation to action:
 
 1. Simulate failures
 2. Observe system behavior
@@ -62,7 +62,7 @@ These are executed using container-level controls and network manipulation.
 
 ### Real-Time System Visibility
 
-WARROOM continuously monitors the system during a drill and shows:
+EDGE_CASE continuously monitors the system during a drill and shows:
 
 - service status (application and database)
 - success rate and error count
@@ -74,7 +74,7 @@ All metrics are derived from real responses, not simulated values.
 
 ### MCP-Based Control Plane
 
-WARROOM uses a control layer to execute and track system changes:
+EDGE_CASE uses a control layer to execute and track system changes:
 
 - container stop and restart
 - latency injection via proxy
@@ -84,7 +84,7 @@ This makes the system transparent and reproducible.
 
 ### Live Interpretation Layer
 
-WARROOM translates system signals into human-readable insights.
+EDGE_CASE translates system signals into human-readable insights.
 
 Instead of raw logs or dashboards, it explains:
 
@@ -96,7 +96,7 @@ This makes it accessible even to non-expert users.
 
 ### Technical Verdict
 
-After each drill, WARROOM provides a clear diagnostic view:
+After each drill, EDGE_CASE provides a clear diagnostic view:
 
 - what failed
 - how severe the failure was
@@ -105,7 +105,7 @@ After each drill, WARROOM provides a clear diagnostic view:
 
 ### Action Plan for Recovery and Improvement
 
-WARROOM generates a structured next-step plan:
+EDGE_CASE generates a structured next-step plan:
 
 - what to fix immediately
 - what to improve next
@@ -184,9 +184,9 @@ Then open http://127.0.0.1:5500 in your browser.
 - Demo Application: Flask + Postgres
 - Infrastructure: container-based environment
 
-## What Makes WARROOM Different
+## What Makes EDGE_CASE Different
 
-WARROOM is not just a monitoring tool.
+EDGE_CASE is not just a monitoring tool.
 
 It combines:
 
@@ -208,10 +208,10 @@ This creates a complete workflow from:
 
 ## Summary
 
-WARROOM helps you answer:
+EDGE_CASE helps you answer:
 
 - What breaks when my system is under stress?
 - How quickly does it fail?
 - What do I need to fix before users are impacted?
 
-Instead of discovering failures in production, WARROOM lets you discover them safely and early.
+Instead of discovering failures in production, EDGE_CASE lets you discover them safely and early.

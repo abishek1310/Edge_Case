@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 
-app = FastAPI(title="WARROOM Backend")
+app = FastAPI(title="EDGE_CASE Backend")
 APP_BASE_URL = "http://127.0.0.1:5001"
 MCP_BASE_URL = "http://127.0.0.1:9100"
 
@@ -54,21 +54,21 @@ DRILL_CONFIG = {
     "db_down": {
         "drill_type": "db_down",
         "label": "DB Down",
-        "target_service": "warroom-db",
+        "target_service": "edgecase-db",
         "duration": "60 seconds",
         "expected_impact": "Checkout requests may return 5xx errors",
     },
     "latency_spike": {
         "drill_type": "latency_spike",
         "label": "Latency Spike",
-        "target_service": "warroom-db via toxiproxy",
+        "target_service": "edgecase-db via toxiproxy",
         "duration": "60 seconds",
         "expected_impact": "Responses may slow down or time out",
     },
     "request_flood": {
         "drill_type": "request_flood",
         "label": "Request Flood",
-        "target_service": "warroom-app",
+        "target_service": "edgecase-app",
         "duration": "20 seconds",
         "expected_impact": "Success rate may drop under load",
     },
@@ -98,7 +98,7 @@ DRILL_CONFIG = {
         "label": "AI Decide (Top Risk Suite)",
         "target_service": "full application risk profile",
         "duration": "90 seconds",
-        "expected_impact": "WARROOM runs a short suite across top vulnerabilities and summarizes highest risks.",
+        "expected_impact": "EDGE_CASE runs a short suite across top vulnerabilities and summarizes highest risks.",
     },
 }
 
@@ -210,7 +210,7 @@ def build_remediation_prompt_template(drill_type: str, evidence: dict, action_pl
 
     return (
         "You are a senior reliability and security engineer.\n"
-        "Apply code and configuration changes to eliminate issues found in WARROOM.\n\n"
+        "Apply code and configuration changes to eliminate issues found in EDGE_CASE.\n\n"
         f"Drill type: {drill_type}\n"
         f"Summary: {evidence.get('summary')}\n"
         f"Likely cause: {evidence.get('likely_cause')}\n"
@@ -283,7 +283,7 @@ def run_podman_command(*args: str) -> subprocess.CompletedProcess:
 
 
 def call_mcp_tool(tool_name: str, payload: dict) -> dict:
-    print(f"[WARROOM backend] calling MCP tool {tool_name}")
+    print(f"[EDGE_CASE backend] calling MCP tool {tool_name}")
     try:
         response = requests.post(
             f"{MCP_BASE_URL}/tools/{tool_name}",
@@ -304,7 +304,7 @@ def call_mcp_tool(tool_name: str, payload: dict) -> dict:
             detail=f"MCP tool {tool_name} returned an unsuccessful response.",
         )
 
-    print(f"[WARROOM backend] MCP {tool_name} success")
+    print(f"[EDGE_CASE backend] MCP {tool_name} success")
     return data
 
 
@@ -317,25 +317,25 @@ def resolve_db_container_name() -> str:
         )
 
     names = [line.strip() for line in result.stdout.splitlines() if line.strip()]
-    matches = [name for name in names if "warroom-db" in name]
+    matches = [name for name in names if "edgecase-db" in name]
 
     if not matches:
         raise HTTPException(
             status_code=500,
-            detail="Could not find a Podman container matching warroom-db.",
+            detail="Could not find a Podman container matching edgecase-db.",
         )
 
     def score(name: str) -> tuple[int, int]:
-        if name == "warroom-db":
+        if name == "edgecase-db":
             return (0, len(name))
-        if name.startswith("warroom-db"):
+        if name.startswith("edgecase-db"):
             return (1, len(name))
-        if name.endswith("warroom-db") or name.endswith("_warroom-db_1"):
+        if name.endswith("edgecase-db") or name.endswith("_edgecase-db_1"):
             return (2, len(name))
         return (3, len(name))
 
     container_name = sorted(matches, key=score)[0]
-    print(f"[WARROOM backend] resolved container name={container_name}")
+    print(f"[EDGE_CASE backend] resolved container name={container_name}")
     return container_name
 
 
@@ -390,7 +390,7 @@ def latency_p95(latencies_ms: list[float]) -> int:
 
 def probe_endpoint(method: str, url: str) -> dict:
     probe_name = "health" if url.endswith("/health") else "checkout"
-    print(f"[WARROOM backend] probing {probe_name} url={url}")
+    print(f"[EDGE_CASE backend] probing {probe_name} url={url}")
     started_at = time.perf_counter()
     try:
         response = requests.request(method, url, timeout=2)
@@ -426,8 +426,8 @@ def probe_db_down_status() -> dict:
     health_result = probe_endpoint("GET", f"{APP_BASE_URL}/health")
     checkout_result = probe_endpoint("POST", f"{APP_BASE_URL}/checkout")
 
-    print(f"[WARROOM backend] health check result={health_result}")
-    print(f"[WARROOM backend] checkout probe result={checkout_result}")
+    print(f"[EDGE_CASE backend] health check result={health_result}")
+    print(f"[EDGE_CASE backend] checkout probe result={checkout_result}")
 
     add_timeline_event("00:00 - Drill started")
     DRILL_STATE["probe_count"] += 2
@@ -443,7 +443,7 @@ def probe_db_down_status() -> dict:
         if DRILL_STATE["db_stop_time"] is None:
             DRILL_STATE["db_stop_time"] = max(elapsed_seconds(), 0)
         add_timeline_event(
-            f"00:{str(DRILL_STATE['db_stop_time']).zfill(2)} - warroom-db stopped"
+            f"00:{str(DRILL_STATE['db_stop_time']).zfill(2)} - edgecase-db stopped"
         )
         append_log("[db] container stopped")
 
@@ -492,8 +492,8 @@ def probe_latency_spike_status() -> dict:
     health_result = probe_endpoint("GET", f"{APP_BASE_URL}/health")
     checkout_result = probe_endpoint("POST", f"{APP_BASE_URL}/checkout")
 
-    print(f"[WARROOM backend] health check result={health_result}")
-    print(f"[WARROOM backend] checkout probe result={checkout_result}")
+    print(f"[EDGE_CASE backend] health check result={health_result}")
+    print(f"[EDGE_CASE backend] checkout probe result={checkout_result}")
 
     add_timeline_event("00:00 - Drill started")
     if DRILL_STATE["latency_injection_time"] is None:
@@ -519,7 +519,7 @@ def probe_latency_spike_status() -> dict:
         add_timeline_event(
             f"00:{str(DRILL_STATE['latency_delay_time']).zfill(2)} - Checkout response delay increased"
         )
-        append_log(f"[proxy] injected database latency via {DRILL_STATE['proxy_name'] or 'warroom-db-proxy'}")
+        append_log(f"[proxy] injected database latency via {DRILL_STATE['proxy_name'] or 'edgecase-db-proxy'}")
 
     if not checkout_result["ok"] and DRILL_STATE["first_failure_time"] is None:
         DRILL_STATE["first_failure_time"] = max(
@@ -561,7 +561,7 @@ def probe_latency_spike_status() -> dict:
 
 
 def classify_fear_with_ollama(fear: str) -> str:
-    print("[WARROOM backend] starting Ollama classification")
+    print("[EDGE_CASE backend] starting Ollama classification")
 
     prompt = (
         "Classify the following fear into exactly one supported drill type.\n"
@@ -594,7 +594,7 @@ def classify_fear_with_ollama(fear: str) -> str:
     if drill_type not in DRILL_CONFIG:
         raise ValueError(f"Unsupported drill type from Ollama: {drill_type}")
 
-    print(f"[WARROOM backend] Ollama classification success drill_type={drill_type}")
+    print(f"[EDGE_CASE backend] Ollama classification success drill_type={drill_type}")
     return drill_type
 
 
@@ -605,7 +605,7 @@ def generate_expected_impact_with_ollama(
     target_service: str,
     duration: str,
 ) -> str:
-    print("[WARROOM backend] starting Ollama expected_impact generation")
+    print("[EDGE_CASE backend] starting Ollama expected_impact generation")
 
     prompt = (
         "You are generating expected impact text for a controlled resilience drill.\n"
@@ -623,7 +623,7 @@ def generate_expected_impact_with_ollama(
         "- credential_exposure: \"If credentials are exposed, unauthorized access risk increases and account safety is reduced.\"\n"
         "- pii_exposure: \"Weak data boundaries could expose sensitive client data and create privacy risk.\"\n"
         "- dependency_api_failure: \"If a critical third-party API fails, core user flows may degrade or stop.\"\n"
-        "- ai_risk_suite: \"WARROOM will run a short top-risk suite and summarize the highest-impact weaknesses.\"\n\n"
+        "- ai_risk_suite: \"EDGE_CASE will run a short top-risk suite and summarize the highest-impact weaknesses.\"\n\n"
         f"Fear: {fear}\n"
         f"Drill type: {drill_type}\n"
         f"Label: {label}\n"
@@ -632,7 +632,7 @@ def generate_expected_impact_with_ollama(
     )
 
     impact = ollama_json_request(prompt)["expected_impact"]
-    print("[WARROOM backend] Ollama expected_impact success")
+    print("[EDGE_CASE backend] Ollama expected_impact success")
     return impact
 
 
@@ -694,7 +694,7 @@ def build_real_latency_evidence() -> dict:
 
 
 def generate_ollama_verdict(evidence_input: dict) -> dict:
-    print("[WARROOM backend] starting Ollama verdict generation")
+    print("[EDGE_CASE backend] starting Ollama verdict generation")
 
     prompt = (
         "You are writing a resilience verdict for an engineering drill.\n"
@@ -703,11 +703,11 @@ def generate_ollama_verdict(evidence_input: dict) -> dict:
         "Focus on application and system failure reasoning, not just the raw infrastructure event.\n"
         "Explain what dependency or resilience weakness caused user-facing failure.\n"
         "Avoid shallow advice.\n"
-        "Bad likely_cause example: \"warroom-db stopped\"\n"
+        "Bad likely_cause example: \"edgecase-db stopped\"\n"
         "Better likely_cause example: "
         "\"The checkout path had a hard dependency on the database and no graceful "
         "fallback, so requests failed immediately after the database became unavailable.\"\n"
-        "Bad suggested_fix example: \"Ensure warroom-db is running\"\n"
+        "Bad suggested_fix example: \"Ensure edgecase-db is running\"\n"
         "Better suggested_fix example: "
         "\"Add retry logic, circuit breaker behavior, and a fallback response when "
         "the database is unavailable.\"\n"
@@ -724,7 +724,7 @@ def generate_ollama_verdict(evidence_input: dict) -> dict:
     )
 
     verdict = ollama_json_request(prompt)
-    print("[WARROOM backend] Ollama success")
+    print("[EDGE_CASE backend] Ollama success")
     return {
         "likely_cause": verdict["likely_cause"],
         "suggested_fix": verdict["suggested_fix"],
@@ -856,7 +856,7 @@ def build_fallback_action_plan(evidence: dict) -> dict:
 
 
 def generate_ollama_action_plan(action_plan_input: dict) -> dict:
-    print("[WARROOM backend] starting Ollama action plan generation")
+    print("[EDGE_CASE backend] starting Ollama action plan generation")
 
     prompt = (
         "You are generating an action plan after a resilience drill.\n"
@@ -874,7 +874,7 @@ def generate_ollama_action_plan(action_plan_input: dict) -> dict:
     )
 
     action_plan = ollama_json_request(prompt)
-    print("[WARROOM backend] Ollama action plan success")
+    print("[EDGE_CASE backend] Ollama action plan success")
     return {
         "do_now": action_plan["do_now"][:3],
         "fix_in_code": action_plan["fix_in_code"][:3],
@@ -914,7 +914,7 @@ def build_live_interpretation_input() -> dict:
 
 
 def generate_ollama_live_interpretation(interpretation_input: dict) -> dict:
-    print("[WARROOM backend] starting Ollama live interpretation")
+    print("[EDGE_CASE backend] starting Ollama live interpretation")
     prompt = (
         "You are generating live failure narration for a resilience drill dashboard.\n"
         "Return valid JSON only in this shape: {\"lines\": [\"...\", \"...\", \"...\", \"...\"]}\n"
@@ -934,7 +934,7 @@ def generate_ollama_live_interpretation(interpretation_input: dict) -> dict:
     if not isinstance(lines, list):
         raise ValueError("Ollama live interpretation did not return a lines list")
     cleaned_lines = [str(line).strip() for line in lines if str(line).strip()][:4]
-    print("[WARROOM backend] Ollama live interpretation success")
+    print("[EDGE_CASE backend] Ollama live interpretation success")
     return {"lines": cleaned_lines}
 
 
@@ -942,7 +942,7 @@ def wait_for_demo_health(timeout_seconds: int = 15) -> None:
     deadline = time.time() + timeout_seconds
     while time.time() < deadline:
         result = probe_endpoint("GET", f"{APP_BASE_URL}/health")
-        print(f"[WARROOM backend] health check result={result}")
+        print(f"[EDGE_CASE backend] health check result={result}")
         if result["ok"]:
             return
         time.sleep(1)
@@ -987,7 +987,7 @@ def build_battle_snapshot(drill_type: str, poll_count: int) -> dict:
                 "first_failure_time": 3,
                 "timeline": [
                     "00:00 - Drill started",
-                    "00:02 - warroom-db stopped",
+                    "00:02 - edgecase-db stopped",
                     "00:03 - First 5xx response",
                 ],
             },
@@ -1000,7 +1000,7 @@ def build_battle_snapshot(drill_type: str, poll_count: int) -> dict:
                 "first_failure_time": 3,
                 "timeline": [
                     "00:00 - Drill started",
-                    "00:02 - warroom-db stopped",
+                    "00:02 - edgecase-db stopped",
                     "00:03 - First 5xx response",
                     "00:05 - Error rate increasing",
                 ],
@@ -1014,7 +1014,7 @@ def build_battle_snapshot(drill_type: str, poll_count: int) -> dict:
                 "first_failure_time": 3,
                 "timeline": [
                     "00:00 - Drill started",
-                    "00:02 - warroom-db stopped",
+                    "00:02 - edgecase-db stopped",
                     "00:03 - First 5xx response",
                     "00:05 - Error rate increasing",
                     "00:10 - Drill complete",
@@ -1245,7 +1245,7 @@ def build_evidence(drill_type: str) -> dict:
             ],
             "timeline": [
                 "00:00 - Drill started",
-                "00:02 - warroom-db stopped",
+                "00:02 - edgecase-db stopped",
                 "00:03 - First 5xx response",
                 "00:05 - Error rate increasing",
                 "00:10 - Drill complete",
@@ -1463,17 +1463,17 @@ def classify_fear_text(fear: str) -> str:
 
 @app.get("/")
 def root():
-    print("[WARROOM backend] GET /")
-    return {"message": "WARROOM backend running"}
+    print("[EDGE_CASE backend] GET /")
+    return {"message": "EDGE_CASE backend running"}
 
 
 @app.post("/classify")
 def classify(request: ClassifyRequest):
-    print(f"[WARROOM backend] POST /classify fear={request.fear!r}")
+    print(f"[EDGE_CASE backend] POST /classify fear={request.fear!r}")
     try:
         drill_type = classify_fear_with_ollama(request.fear)
     except Exception as exc:
-        print(f"[WARROOM backend] Ollama classification fallback: {exc}")
+        print(f"[EDGE_CASE backend] Ollama classification fallback: {exc}")
         drill_type = classify_fear_text(request.fear)
 
     response = dict(DRILL_CONFIG[drill_type])
@@ -1487,7 +1487,7 @@ def classify(request: ClassifyRequest):
             duration=response["duration"],
         )
     except Exception as exc:
-        print(f"[WARROOM backend] Ollama expected_impact fallback: {exc}")
+        print(f"[EDGE_CASE backend] Ollama expected_impact fallback: {exc}")
 
     return response
 
@@ -1510,7 +1510,7 @@ def start_drill(request: StartDrillRequest):
         ]
         DRILL_STATE["evidence"] = build_resolved_evidence(request.drill_type)
         print(
-            f"[WARROOM backend] verification start "
+            f"[EDGE_CASE backend] verification start "
             f"drill_id={drill_id} drill_type={request.drill_type}"
         )
         return {
@@ -1542,14 +1542,14 @@ def start_drill(request: StartDrillRequest):
         if request.drill_type not in {"db_down", "latency_spike"}:
             DRILL_STATE["evidence"] = build_evidence(request.drill_type)
         print(
-            f"[WARROOM backend] drill start "
+            f"[EDGE_CASE backend] drill start "
             f"drill_id={drill_id} drill_type={request.drill_type} "
             f"container={DRILL_STATE['db_container_name']} proxy={DRILL_STATE['proxy_name']}"
         )
     else:
         DRILL_STATE["evidence"] = build_evidence(request.drill_type)
         print(
-            f"[WARROOM backend] drill start "
+            f"[EDGE_CASE backend] drill start "
             f"drill_id={drill_id} drill_type={request.drill_type}"
         )
 
@@ -1562,7 +1562,7 @@ def start_drill(request: StartDrillRequest):
 @app.get("/drill/status")
 def drill_status():
     if not DRILL_STATE["drill_id"]:
-        print("[WARROOM backend] GET /drill/status no active drill")
+        print("[EDGE_CASE backend] GET /drill/status no active drill")
         return {
             "drill_id": None,
             "status": "idle",
@@ -1579,19 +1579,19 @@ def drill_status():
     if DRILL_STATE["status"] == "running":
         DRILL_STATE["poll_count"] += 1
         print(
-            f"[WARROOM backend] GET /drill/status "
+            f"[EDGE_CASE backend] GET /drill/status "
             f"drill_id={DRILL_STATE['drill_id']} poll_count={DRILL_STATE['poll_count']}"
         )
 
         if DRILL_STATE["poll_count"] >= 5:
             DRILL_STATE["status"] = "complete"
             print(
-                f"[WARROOM backend] drill completion "
+                f"[EDGE_CASE backend] drill completion "
                 f"drill_id={DRILL_STATE['drill_id']}"
             )
     else:
         print(
-            f"[WARROOM backend] GET /drill/status "
+            f"[EDGE_CASE backend] GET /drill/status "
             f"drill_id={DRILL_STATE['drill_id']} poll_count={DRILL_STATE['poll_count']}"
         )
 
@@ -1629,7 +1629,7 @@ def drill_status():
 @app.get("/drill/evidence")
 def drill_evidence():
     print(
-        f"[WARROOM backend] GET /drill/evidence "
+        f"[EDGE_CASE backend] GET /drill/evidence "
         f"drill_id={DRILL_STATE['drill_id']} status={DRILL_STATE['status']}"
     )
 
@@ -1637,7 +1637,7 @@ def drill_evidence():
         return build_resolved_evidence(DRILL_STATE["drill_type"] or "db_down")
 
     if DRILL_STATE["drill_type"] in {"db_down", "latency_spike"} and DRILL_STATE["status"] != "idle":
-        print(f"[WARROOM backend] evidence fetch for real {DRILL_STATE['drill_type']} drill")
+        print(f"[EDGE_CASE backend] evidence fetch for real {DRILL_STATE['drill_type']} drill")
         if DRILL_STATE["drill_type"] == "db_down":
             evidence = DRILL_STATE["evidence"] or build_real_db_down_evidence()
         else:
@@ -1654,7 +1654,7 @@ def drill_evidence():
         try:
             evidence.update(generate_ollama_verdict(ollama_input))
         except Exception as exc:
-            print(f"[WARROOM backend] Ollama fallback: {exc}")
+            print(f"[EDGE_CASE backend] Ollama fallback: {exc}")
         return evidence
 
     if not DRILL_STATE["evidence"]:
@@ -1675,7 +1675,7 @@ def drill_evidence():
 @app.get("/drill/live-interpretation")
 def drill_live_interpretation():
     print(
-        f"[WARROOM backend] GET /drill/live-interpretation "
+        f"[EDGE_CASE backend] GET /drill/live-interpretation "
         f"drill_id={DRILL_STATE['drill_id']} status={DRILL_STATE['status']}"
     )
 
@@ -1686,14 +1686,14 @@ def drill_live_interpretation():
     try:
         return generate_ollama_live_interpretation(interpretation_input)
     except Exception as exc:
-        print(f"[WARROOM backend] live interpretation fallback: {exc}")
+        print(f"[EDGE_CASE backend] live interpretation fallback: {exc}")
         return {"lines": []}
 
 
 @app.get("/drill/action-plan")
 def drill_action_plan():
     print(
-        f"[WARROOM backend] GET /drill/action-plan "
+        f"[EDGE_CASE backend] GET /drill/action-plan "
         f"drill_id={DRILL_STATE['drill_id']} status={DRILL_STATE['status']}"
     )
 
@@ -1742,7 +1742,7 @@ def drill_action_plan():
     try:
         return generate_ollama_action_plan(action_plan_input)
     except Exception as exc:
-        print(f"[WARROOM backend] Ollama action plan fallback: {exc}")
+        print(f"[EDGE_CASE backend] Ollama action plan fallback: {exc}")
         return build_fallback_action_plan(evidence)
 
 
@@ -1836,7 +1836,7 @@ def remediation_verify(payload: RemediationVerifyRequest):
 
 @app.post("/drill/reset")
 def reset_drill():
-    print(f"[WARROOM backend] POST /drill/reset drill_id={DRILL_STATE['drill_id']}")
+    print(f"[EDGE_CASE backend] POST /drill/reset drill_id={DRILL_STATE['drill_id']}")
 
     if DRILL_STATE["drill_type"] in {
         "db_down",
@@ -1854,7 +1854,7 @@ def reset_drill():
         )
         DRILL_STATE["mcp_activity"] = result.get("mcp_activity", DRILL_STATE["mcp_activity"])
         print(
-            f"[WARROOM backend] reset success "
+            f"[EDGE_CASE backend] reset success "
             f"drill_id={DRILL_STATE['drill_id']} "
             f"container={result.get('container')} proxy={result.get('proxy')}"
         )

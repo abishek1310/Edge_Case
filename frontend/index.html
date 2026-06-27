@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WARROOM</title>
+  <title>EDGE_CASE</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main class="app-shell">
-    <nav class="flow-steps" aria-label="WARROOM flow steps">
+    <nav class="flow-steps" aria-label="EDGE_CASE flow steps">
       <button type="button" class="flow-step active" id="stepBtn1" onclick="goToStep(1)">
         <span class="flow-step-number">1</span>
         <span class="flow-step-label">Define Risk</span>
@@ -30,7 +30,7 @@
     <section class="screen-panel" id="screen1">
       <div class="landing-hero">
         <div class="landing-copy">
-          <div class="eyebrow">WARROOM</div>
+          <div class="eyebrow">EDGE_CASE</div>
           <h1>What breaks your app?</h1>
           <p class="tagline">Break it before your users do</p>
 
@@ -52,13 +52,13 @@
 
           <button type="button" class="primary-button" id="runBtn" onclick="runDrill()">Run Drill</button>
           <button type="button" class="secondary-button ai-decide-button" id="aiDecideBtn" onclick="runAIDecide()">Let AI Decide &amp; Run Top Risks</button>
-          <p class="ai-decide-helper">Not sure what to test? WARROOM AI will run a short top-vulnerability suite across the app.</p>
+          <p class="ai-decide-helper">Not sure what to test? EDGE_CASE AI will run a short top-vulnerability suite across the app.</p>
         </div>
 
         <aside class="brand-visual-card">
           <img
-            src="assets/warroom-brand.png"
-            alt="WARROOM brand visual"
+            src="assets/edgecase-brand.png"
+            alt="EDGE_CASE brand visual"
             class="brand-visual-image"
           >
         </aside>
@@ -72,8 +72,8 @@
           <div class="mission-brand-stack">
             <div class="mission-icon" id="missionIcon" aria-hidden="true"></div>
             <img
-              src="assets/warroom-brand.png"
-              alt="WARROOM brand mark"
+              src="assets/edgecase-brand.png"
+              alt="EDGE_CASE brand mark"
               class="mission-brand-image"
             >
           </div>
@@ -98,7 +98,7 @@
         <section class="card approval-panel target-panel">
           <div class="mission-label">Target Service</div>
           <div class="approval-value approval-value-strong" id="targetService"></div>
-          <p class="approval-panel-copy">This is the service path WARROOM will stress during the drill.</p>
+          <p class="approval-panel-copy">This is the service path EDGE_CASE will stress during the drill.</p>
         </section>
 
         <section class="card approval-panel">
@@ -132,7 +132,7 @@
         <section class="card approval-panel impact-panel" id="impactPanel">
           <div class="mission-label">Expected Impact</div>
           <div class="approval-value" id="impact"></div>
-          <p class="approval-panel-copy">WARROOM will keep this blast radius contained to the selected drill setup.</p>
+          <p class="approval-panel-copy">EDGE_CASE will keep this blast radius contained to the selected drill setup.</p>
         </section>
       </div>
 
@@ -159,7 +159,7 @@
       <div class="battle-topbar">
         <div>
           <h1>Live Failure Test</h1>
-          <p class="subtitle">WARROOM is running the approved failure simulation.</p>
+          <p class="subtitle">EDGE_CASE is running the approved failure simulation.</p>
         </div>
         <button type="button" class="secondary-button abort-button" onclick="abortDrill()">Abort Drill</button>
       </div>
@@ -173,7 +173,7 @@
         <div class="battle-interpretation-card">
           <div class="section-heading interpretation-heading">What This Means For You</div>
           <ul class="interpretation-list" id="liveInterpretationList">
-            <li class="interpretation-item">WARROOM is preparing the live failure interpretation.</li>
+            <li class="interpretation-item">EDGE_CASE is preparing the live failure interpretation.</li>
             <li class="interpretation-item">The simulation is collecting system signals and dependency impact.</li>
             <li class="interpretation-item">User-facing effects will appear here as the drill unfolds.</li>
           </ul>
@@ -194,7 +194,7 @@
           <div class="service-grid">
             <article class="service-card" id="appServiceCard">
               <div class="service-card-top">
-                <span class="service-name">warroom-app</span>
+                <span class="service-name">edgecase-app</span>
                 <span class="status-pill" id="appStatusPill">
                   <span class="status-dot status-running" id="appStatusDot"></span>
                   <span id="appStatusText">running</span>
@@ -205,7 +205,7 @@
 
             <article class="service-card" id="dbServiceCard">
               <div class="service-card-top">
-                <span class="service-name">warroom-db</span>
+                <span class="service-name">edgecase-db</span>
                 <span class="status-pill" id="dbStatusPill">
                   <span class="status-dot status-running" id="dbStatusDot"></span>
                   <span id="dbStatusText">running</span>

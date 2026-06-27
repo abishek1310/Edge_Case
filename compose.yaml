@@ -1,66 +1,66 @@
 services:
-  warroom-db:
+  edgecase-db:
     image: postgres:16
     environment:
-      POSTGRES_USER: warroom
-      POSTGRES_PASSWORD: warroom
-      POSTGRES_DB: warroom
+      POSTGRES_USER: edgecase
+      POSTGRES_PASSWORD: edgecase
+      POSTGRES_DB: edgecase
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U warroom"]
+      test: ["CMD-SHELL", "pg_isready -U edgecase"]
       interval: 10s
       timeout: 5s
       retries: 5
     volumes:
-      - warroom-db-data:/var/lib/postgresql
+      - edgecase-db-data:/var/lib/postgresql
     networks:
-      - warroom-net
+      - edgecase-net
 
-  warroom-toxiproxy:
+  edgecase-toxiproxy:
     image: ghcr.io/shopify/toxiproxy:2.12.0
     ports:
       - "8474:8474"
       - "5433:5433"
     depends_on:
-      - warroom-db
+      - edgecase-db
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://localhost:8474/version || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - warroom-net
+      - edgecase-net
 
-  warroom-app:
+  edgecase-app:
     build:
       context: ./demo-app
       dockerfile: Containerfile
     environment:
-      POSTGRES_HOST: warroom-toxiproxy
+      POSTGRES_HOST: edgecase-toxiproxy
       POSTGRES_PORT: "5433"
-      POSTGRES_USER: warroom
-      POSTGRES_PASSWORD: warroom
-      POSTGRES_DB: warroom
+      POSTGRES_USER: edgecase
+      POSTGRES_PASSWORD: edgecase
+      POSTGRES_DB: edgecase
     ports:
       - "5001:5000"
     depends_on:
-      - warroom-toxiproxy-setup
-      - warroom-db
+      - edgecase-toxiproxy-setup
+      - edgecase-db
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - warroom-net
+      - edgecase-net
 
-  warroom-backend:
+  edgecase-backend:
     image: python:3.11-slim
     working_dir: /app
     volumes:
       - ./backend:/app
     environment:
-      MCP_BASE_URL: http://warroom-mcp:9100
-      APP_BASE_URL: http://warroom-app:5000
+      MCP_BASE_URL: http://edgecase-mcp:9100
+      APP_BASE_URL: http://edgecase-app:5000
     command:
       - sh
       - -c
@@ -70,12 +70,12 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - warroom-mcp
-      - warroom-app
+      - edgecase-mcp
+      - edgecase-app
     networks:
-      - warroom-net
+      - edgecase-net
 
-  warroom-mcp:
+  edgecase-mcp:
     image: python:3.11-slim
     working_dir: /app
     volumes:
@@ -89,18 +89,18 @@ services:
     ports:
       - "9100:9100"
     depends_on:
-      - warroom-toxiproxy
-      - warroom-db
-      - warroom-app
+      - edgecase-toxiproxy
+      - edgecase-db
+      - edgecase-app
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://localhost:9100/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - warroom-net
+      - edgecase-net
 
-  warroom-frontend:
+  edgecase-frontend:
     image: python:3.11-slim
     working_dir: /app
     volumes:
@@ -109,27 +109,27 @@ services:
     ports:
       - "5500:5500"
     depends_on:
-      - warroom-backend
+      - edgecase-backend
     networks:
-      - warroom-net
+      - edgecase-net
 
-  warroom-toxiproxy-setup:
+  edgecase-toxiproxy-setup:
     image: curlimages/curl:latest
     depends_on:
-      - warroom-toxiproxy
-      - warroom-db
+      - edgecase-toxiproxy
+      - edgecase-db
     restart: "no"
     command:
       - sh
       - -c
       - |
         sleep 3
-        curl -s -X POST http://warroom-toxiproxy:8474/proxies -H "Content-Type: application/json" -d '{"name":"warroom-db-proxy","listen":"0.0.0.0:5433","upstream":"warroom-db:5432","enabled":true}'
+        curl -s -X POST http://edgecase-toxiproxy:8474/proxies -H "Content-Type: application/json" -d '{"name":"edgecase-db-proxy","listen":"0.0.0.0:5433","upstream":"edgecase-db:5432","enabled":true}'
     networks:
-      - warroom-net
+      - edgecase-net
 
 networks:
-  warroom-net:
+  edgecase-net:
 
 volumes:
-  warroom-db-data:
+  edgecase-db-data:

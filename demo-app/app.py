@@ -10,11 +10,11 @@ from flask import Flask, jsonify, request
 app = Flask(__name__)
 
 #Few passwords
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "warroom-db-proxy")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "edgecase-db-proxy")
 POSTGRES_PORT = int(os.getenv("POSTGRES_PORT", "5433"))
-POSTGRES_USER = os.getenv("POSTGRES_USER", "warroom")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "warroom")
-POSTGRES_DB = os.getenv("POSTGRES_DB", "warroom")
+POSTGRES_USER = os.getenv("POSTGRES_USER", "edgecase")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "edgecase")
+POSTGRES_DB = os.getenv("POSTGRES_DB", "edgecase")
 
 
 def get_connection():
